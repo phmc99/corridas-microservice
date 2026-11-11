@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum StatusCorrida {
+  SOLICITADA
+  ACEITA
+  EM_ANDAMENTO
+  FINALIZADA
+}
+
+model Corrida {
+  id             Int           @id @default(autoincrement())
+  passageiroId   String        @map("passageiro_id") @db.VarChar(64)
+  motoristaId    String?       @map("motorista_id") @db.VarChar(64)
+  origem         String        @db.VarChar(255)
+  destino        String        @db.VarChar(255)
+  status         StatusCorrida @default(SOLICITADA)
+  idempotencyKey String?       @map("idempotency_key") @db.VarChar(255)
+  criadoEm       DateTime      @default(now()) @map("criado_em")
+  atualizadoEm   DateTime      @default(now()) @map("atualizado_em")
+
+  // Garante a idempotência no banco, mesmo com requisições simultâneas.
+  // No MySQL, várias linhas com idempotency_key NULL não violam o índice.
+  @@unique([passageiroId, idempotencyKey])
+  @@map("corridas")
+}

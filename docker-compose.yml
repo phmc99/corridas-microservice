@@ -1,0 +1,51 @@
+services:
+  api:
+    build: ./apps/api
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: mysql://corridas:corridas_teste@mysql:3306/corridas
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: corridas
+      MYSQL_USER: corridas
+      MYSQL_PASSWORD: corridas_teste
+      MYSQL_ROOT_PASSWORD: root_teste
+    volumes:
+      - mysql-dados:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -ucorridas -pcorridas_teste"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-alpine
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+volumes:
+  mysql-dados:
