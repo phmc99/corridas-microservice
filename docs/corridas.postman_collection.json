@@ -1,0 +1,1285 @@
+{
+  "info": {
+    "name": "corridas API",
+    "description": "Endpoints da API de corridas (Fase 2).\n\nSuba o ambiente com `docker compose up --build` e rode as pastas em ordem: cada pasta guarda o id da corrida que cria em uma variável da coleção.\n\nOs tokens são apenas de teste e vêm de apps/api/test/tokens-teste.json.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "tokenPassageiro1",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJmaWwiOiJwYXNzYWdlaXJvIiwiaWF0IjoxNzk0MzUwMzU4LCJleHAiOjIxMDk5MjYzNTgsInN1YiI6InBhc3NhZ2Vpcm8tMSJ9.RyeOyqoPNYDucLDuyD8qZ8qcAOKeYJbwz4Ka81yzIV7T3Gf_wVau3tJe8O89MBkbmXEfmXFrDD5kd2yD5AJ_ouDMc0YGkvjeWQNlYDhBxyPe_oyd9D0fJwFEbU9SxVeWpllI24Nd_hzdtmeqkMKhpCFhyzEdLheAY5xzhitiF1tOfXmrgPAYEql3TavWx0OJpXQ1WAUGUniCtjZS9A1v42c2fpqRW9QNrjoNKElSzL-HjcLN2dZ7vb7zW2uYeG1Br0t5BaHqDRNfVT5uRQsrFRcc4INtAd_a0nb85-o6IeTJMmLBC32DaaqVtVfj2jl5r-tlfumRAN0I8X4edZPOVw"
+    },
+    {
+      "key": "tokenPassageiro2",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJmaWwiOiJwYXNzYWdlaXJvIiwiaWF0IjoxNzk0MzUwMzU4LCJleHAiOjIxMDk5MjYzNTgsInN1YiI6InBhc3NhZ2Vpcm8tMiJ9.ObCCqkzOcxQKIUcaRJmJRkKD5H4iTwdVUYKS3VbuDYOD1W3WF1g2Qd8C34aJdfYhhwI8p3YygMeSa5dmNHedTWubLP9rndTjcpKi-_3MphXHFxegD0gWXZsZBwvl9cEWkm2bpSJ7JZp2RQc4z2s0jS2UtKlBM0-WRh8xFOWIX6XFkfM_g3W6axa5KoG-rd83rGDBXOwVaJfuOSUBkKly4dRf5YPhWdvwceV4mpMPYPTgEtjZJOLzcpMxiZuHI3fCdotVAaH50e7n34T2iiO6GeSLgOn1Q3xl4yY_LXOmWXjEvgjSvlh_8Vp9HpWJTFoz78KUhIiI7Zk5s52gv3fxlQ"
+    },
+    {
+      "key": "tokenMotorista1",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJmaWwiOiJtb3RvcmlzdGEiLCJpYXQiOjE3OTQzNTAzNTgsImV4cCI6MjEwOTkyNjM1OCwic3ViIjoibW90b3Jpc3RhLTEifQ.ZFsoYBIwyCam5KAl-AV64_1u1cFySUPYVy7jX1PNJaVpiA5nHcrsCgcIx744XEhGsALxYTEd_WYRThxc6UCghTLVCo9CnwWTLl2XJtGcpz0O1gb9hOdBcfxeSUA_ycwJvsI7QY0ssFdpRl8LCKRERRzbzZCvopQKXG03XlUkeHNn7e_fMgPvU4BP1bRG7eTDjsI31jFLjlgwVnh8g4IaQ5Zo72Whj-S0hvmUHxcAufZCwylbegcYCPX3aSb-uRcA5qFWVPMXYvvWNaDApdf52bZhiNfFCUOcZZpyHKQhaj24NWZdxop2yY-UUvX7hxvqvxWTv2Uf7LhZQfF-4DV-Cw"
+    },
+    {
+      "key": "tokenMotorista2",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJmaWwiOiJtb3RvcmlzdGEiLCJpYXQiOjE3OTQzNTAzNTgsImV4cCI6MjEwOTkyNjM1OCwic3ViIjoibW90b3Jpc3RhLTIifQ.jOBya8sHvru2W0SH-PWTmesaeuPWrq3aoKKYKAdOYaTwhHQvmq6YLxeXvBIfqnMnSfjMcg7CJ0_CzoDTlt5dyCgZZdbPfanNTf7VgGPvkaetTZdrqHrpjLyUJ7_mEFiH-EGwjoWj4MEUUj7JVvZM3KE21fTgWcj7BODJSd1e3PTxSnCrAC3HnhqloqolS2CuCN2Q_CMOqEQp05rA2TbVa2EfmGcVqwmdu_SrcSOnvPscC5h43ED9gqyx90Gj5CrLE05tS79oYdkpnqNaD2bJGeYwuWx3C2gF7huq0kXHUwU5xbVuqJ4FZj_2AF8ezvi7ANEyvKHXBLyfz28rP1Qtgg"
+    },
+    {
+      "key": "tokenExpirado",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJmaWwiOiJwYXNzYWdlaXJvIiwiaWF0IjoxNzk0MzUwMzU4LCJleHAiOjE3OTQzNTAyOTgsInN1YiI6InBhc3NhZ2Vpcm8tMSJ9.LasRLwg7oh23kPZyePeWAN3iRY9T58cLKTgpNdbfv3_9mN2zUiAt6o_dglPtyAqN50u2DTnknTHoRgalAk8NRKbYHQNLd3STm7gq8K2MoDLfqwQt6qWmfCdhajjCqNF5Br9tW8kWR6-SUKjyyeYEmFcREFYn_xQjmvPffddP5Y9-_keFCzSa4FI7pvSrQV-bqgxTGhu1j2djfZrC2BRlQnDkXi6d8uOceJdQ8DcXmKr0E4pjVaId5Vq6cKKxzlMBa95XWgpisBzB07YZiYxg0HX_OMXahlQYpjybmzIluaIWgW9ryZOmUWlljW821U3stiqR9nL5UArhJb1tEIGAEw"
+    },
+    {
+      "key": "corridaId",
+      "value": ""
+    },
+    {
+      "key": "corridaErroId",
+      "value": ""
+    },
+    {
+      "key": "idempotencyKey",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Fluxo feliz",
+      "item": [
+        {
+          "name": "Criar corrida (passageiro 1)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "postman-fluxo-feliz"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"corridaId\", pm.response.json().id);",
+                  "pm.test(\"corrida SOLICITADA\", () => pm.expect(pm.response.json().status).to.eql(\"SOLICITADA\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar minhas corridas (passageiro 1)",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar corrida (passageiro 1)",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aceitar (motorista 1)",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACEITA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"corrida ACEITA\", () => pm.expect(pm.response.json().status).to.eql(\"ACEITA\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar (motorista 1)",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_ANDAMENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"corrida EM_ANDAMENTO\", () => pm.expect(pm.response.json().status).to.eql(\"EM_ANDAMENTO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Finalizar (motorista 1)",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FINALIZADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"corrida FINALIZADA\", () => pm.expect(pm.response.json().status).to.eql(\"FINALIZADA\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar corrida finalizada (passageiro 1)",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"corrida FINALIZADA\", () => pm.expect(pm.response.json().status).to.eql(\"FINALIZADA\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Idempotência",
+      "item": [
+        {
+          "name": "Criar corrida com Idempotency-Key",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "description": "Gera uma chave nova a cada execução e guarda em idempotencyKey.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"corridaIdempotente\", pm.response.json().id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idempotencyKey\", `chave-${Date.now()}`);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Repetir com a mesma chave (não duplica)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "description": "Mesma chave da requisição anterior: devolve a corrida original com 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"mesma corrida\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"corridaIdempotente\"))));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Cenários de erro",
+      "item": [
+        {
+          "name": "Criar corrida para os cenários (passageiro 1)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"corridaErroId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 - sem token",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 - token expirado",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenExpirado}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - motorista cria corrida",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\",\n  \"destino\": \"Barra da Tijuca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - motorista consulta corrida",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - passageiro altera status",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACEITA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - passageiro 2 consulta corrida do passageiro 1",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - finalizar corrida ainda não aceita",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FINALIZADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aceitar (motorista 1)",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACEITA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - motorista 2 aceita corrida já aceita",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACEITA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - motorista 2 inicia corrida do motorista 1",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_ANDAMENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 - status inválido",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMotorista1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/{{corridaErroId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "{{corridaErroId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 - destino ausente",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origem\": \"Centro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 - JSON malformado",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/corridas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"origem\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 - corrida inexistente",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPassageiro1}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/corridas/2147483000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "corridas",
+                "2147483000"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Métricas",
+      "item": [
+        {
+          "name": "Métricas Prometheus",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "metrics"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
