@@ -1,0 +1,11 @@
+# Desenvolvimento em Windows, execução em containers Linux: LF evita scripts quebrados por CRLF
+* text=auto eol=lf
+
+# Binários: sem conversão
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
