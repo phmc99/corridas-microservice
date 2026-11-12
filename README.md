@@ -295,4 +295,7 @@ eslint.config.js     configuração do ESLint para todo o repositório
 
 ## CI
 
-O pipeline do GitHub Actions ficará em `.github/workflows/`. Ele vai usar os comandos da raiz: `npm run lint` e, com os serviços no ar, `npm test` em cada app.
+O pipeline do GitHub Actions está em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e roda a cada push e pull request, com dois jobs em paralelo:
+
+- **lint:** `npm ci` e `npm run lint` na raiz.
+- **build-e-testes:** `docker compose build` (imagens da API, do worker e da UI) e depois os mesmos comandos de teste do ambiente local, `docker compose run --rm api npm test` e `docker compose run --rm worker npm test`. O compose sobe MySQL, Redis, MongoDB e RabbitMQ dentro do runner. Se algo falhar, o job imprime os logs dos serviços.

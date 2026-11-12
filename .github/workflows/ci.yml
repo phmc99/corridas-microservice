@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  # Os testes são de integração: rodam dentro das imagens, contra MySQL, Redis,
+  # MongoDB e RabbitMQ do próprio docker compose, como no ambiente local.
+  build-e-testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build das imagens
+        run: docker compose build
+      - name: Testes da API
+        run: docker compose run --rm api npm test
+      - name: Testes do worker
+        run: docker compose run --rm worker npm test
+      - name: Logs dos serviços (em caso de falha)
+        if: failure()
+        run: docker compose logs
+      - name: Derrubar o ambiente
+        if: always()
+        run: docker compose down -v
