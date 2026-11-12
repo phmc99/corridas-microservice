@@ -98,6 +98,17 @@ services:
     ports:
       - "16686:16686"
 
+  # Teste de carga. Fica fora do `docker compose up` (profile) e roda com: docker compose run --rm k6
+  k6:
+    image: grafana/k6:1.3.0
+    profiles: ["carga"]
+    command: ["run", "/scripts/corridas.js"]
+    volumes:
+      - ./k6:/scripts:ro
+      - ./apps/api/test/tokens-teste.json:/tokens/tokens-teste.json:ro
+    depends_on:
+      - api
+
   prometheus:
     image: prom/prometheus:v3.5.0
     ports:

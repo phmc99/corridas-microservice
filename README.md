@@ -2,7 +2,7 @@
 
 Versão simplificada do fluxo central de um sistema de táxi: passageiros solicitam corridas, motoristas aceitam e o sistema acompanha o status em tempo quase real.
 
-> **Status:** Fase 4. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB, RabbitMQ, Prometheus e Jaeger pelo `docker compose`. O teste de carga ainda não existe.
+> **Status:** Fase 4. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB, RabbitMQ, Prometheus e Jaeger pelo `docker compose`. O teste de carga roda com k6.
 
 ## Arquitetura
 
@@ -249,6 +249,20 @@ Worker:
 - evento antigo entregue depois não volta o status do cache;
 - mensagem malformada é reconhecida como inválida.
 
+## Teste de carga
+
+O script `k6/corridas.js` simula passageiros solicitando corridas: cada iteração cria uma corrida com uma `Idempotency-Key` nova e lê a corrida criada. A carga sobe até 20 usuários simultâneos em 30 segundos, fica 1 minuto nesse patamar e desce. O teste falha se mais de 1% das requisições der erro ou se o p95 da latência passar de 500 ms.
+
+Com o ambiente no ar (`docker compose up`):
+
+```bash
+docker compose run --rm k6
+```
+
+O serviço `k6` está no profile `carga`, então não sobe junto com o `docker compose up`. Durante o teste dá para acompanhar a taxa, a latência e a fila no Prometheus e os traces no Jaeger. As requisições usam `X-Correlation-Id` no formato `k6-<usuário>-<iteração>`.
+
+Resultado de referência numa máquina de desenvolvimento: cerca de 3.100 requisições em 1m40s, 0% de erro e p95 de 53 ms.
+
 ## Decisões e limitações
 
 - **Evento perdido com o broker fora.** A corrida é gravada e a API responde `201`, mas o evento se perde. Fica registrado em log e em `eventos_publicados_total{resultado="falha"}`. O MySQL continua correto, mas o histórico fica sem aquele evento. A correção seria uma tabela outbox, deixada de fora para manter a solução simples.
@@ -272,6 +286,7 @@ apps/
     src/             pages, components, services
 infra/               configuração local de mysql, redis, mongodb, rabbitmq e prometheus
 docs/                documentação
+k6/                  script do teste de carga
 observability/       regras de alerta do Prometheus (e a versão PrometheusRule)
 docker-compose.yml   ambiente local
 package.json         workspaces do npm, lint e testes de todos os apps

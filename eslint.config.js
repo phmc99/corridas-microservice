@@ -36,4 +36,12 @@ module.exports = [
       },
     },
   },
+  // Script do k6: módulo ES com as variáveis globais que o k6 injeta.
+  {
+    files: ['k6/**/*.js'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: { __ENV: 'readonly', __VU: 'readonly', __ITER: 'readonly', open: 'readonly', crypto: 'readonly' },
+    },
+  },
 ];
