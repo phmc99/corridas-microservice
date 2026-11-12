@@ -3,11 +3,12 @@
   "private": true,
   "workspaces": [
     "apps/api",
-    "apps/worker"
+    "apps/worker",
+    "apps/ui"
   ],
   "scripts": {
     "lint": "eslint .",
-    "test": "npm test --workspaces"
+    "test": "npm test --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

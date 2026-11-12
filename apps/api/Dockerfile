@@ -10,6 +10,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/worker/package.json apps/worker/
+COPY apps/ui/package.json apps/ui/
 RUN npm ci --omit=dev --workspace apps/api
 
 COPY apps/api apps/api

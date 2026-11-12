@@ -2,7 +2,7 @@
 
 Versão simplificada do fluxo central de um sistema de táxi: passageiros solicitam corridas, motoristas aceitam e o sistema acompanha o status em tempo quase real.
 
-> **Status:** Fase 3. A API e o worker estão prontos e rodam com MySQL, Redis, MongoDB e RabbitMQ pelo `docker compose`. A UI, o Prometheus e o tracing com OpenTelemetry ainda não existem.
+> **Status:** Fase 4. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB e RabbitMQ pelo `docker compose`. O Prometheus e o tracing com OpenTelemetry ainda não existem.
 
 ## Arquitetura
 
@@ -10,7 +10,7 @@ Versão simplificada do fluxo central de um sistema de táxi: passageiros solici
 | --- | --- | --- |
 | API (Node.js, Express 5, Prisma) | Cria, altera o status e consulta corridas. Autenticação via JWT. | Pronta |
 | Worker (Node.js, Express 5) | Consome os eventos `corrida.criada` e `corrida.status_alterado`, atualiza o cache no Redis e grava o histórico no MongoDB. | Pronto |
-| UI (React) | Login com token, criar corrida, listar e acompanhar status. | A fazer |
+| UI (React, Vite) | Login com token, criar corrida, listar e acompanhar status. | Pronta |
 | Broker | RabbitMQ. | No compose |
 
 ## Como rodar
@@ -21,7 +21,7 @@ Pré-requisito: apenas [Docker](https://docs.docker.com/get-docker/) instalado.
 docker compose up --build
 ```
 
-A API fica em `http://localhost:3000`. Ao subir, ela aplica as migrations do banco sozinha. O worker expõe só o `/metrics`, em `http://localhost:3001/metrics`.
+A UI fica em `http://localhost:8080` e a API em `http://localhost:3000`. Ao subir, ela aplica as migrations do banco sozinha. O worker expõe só o `/metrics`, em `http://localhost:3001/metrics`.
 
 Para rodar os testes contra os serviços do compose:
 
@@ -35,7 +35,7 @@ docker compose run --rm worker npm test
 
 ## Monorepo
 
-O repositório usa [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces): `apps/api` e `apps/worker` são pacotes separados, com um único `package-lock.json` e uma única configuração do ESLint na raiz.
+O repositório usa [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces): `apps/api`, `apps/worker` e `apps/ui` são pacotes separados, com um único `package-lock.json` e uma única configuração do ESLint na raiz.
 
 ```bash
 npm install       # instala as dependências de todos os apps
@@ -76,6 +76,30 @@ Corpo do `PATCH`: `{ "status": "ACEITA" }`, `"EM_ANDAMENTO"` ou `"FINALIZADA"`.
 ### Exemplo
 
 Copie um token de [`apps/api/test/tokens-teste.json`](apps/api/test/tokens-teste.json) e use no Insomnia/Postman [`docs/corridas.postman_collection.json`](docs/corridas.postman_collection.json).
+
+## UI
+
+React com [Vite](https://vite.dev), em JavaScript, sem biblioteca de rotas nem de estado. Abra `http://localhost:8080`.
+
+Para ver o fluxo completo, use duas abas (o token fica no `sessionStorage`, que é separado por aba):
+
+1. Na primeira, entre com o token `passageiro1` de [`tokens-teste.json`](apps/api/test/tokens-teste.json) e solicite uma corrida. Ela aparece em "Acompanhando corrida N".
+2. Na segunda, entre com `motorista1`, informe o id da corrida e clique em Aceitar, Iniciar e Finalizar.
+3. A primeira aba mostra cada mudança de status em até um ou dois segundos, sem recarregar.
+
+Como funciona:
+
+- **Login:** a UI só lê o payload do JWT para saber o perfil e escolher a tela. Quem valida o token é a API.
+- **Mesma origem:** no Docker, o nginx serve os arquivos estáticos e repassa `/api/*` para a API. Em desenvolvimento, o proxy do Vite faz o mesmo papel. Assim a API não precisa de CORS.
+- **Acompanhamento:** polling. A lista (`GET /corridas`, lida do MySQL) é atualizada a cada 2 s, e a corrida acompanhada (`GET /corridas/:id`, lida do cache do Redis) a cada 1 s. A segunda mostra o resultado do caminho API → RabbitMQ → worker → Redis.
+- **Idempotência:** cada envio do formulário leva uma `Idempotency-Key` gerada no navegador. Se o envio falhar, a nova tentativa reusa a mesma chave; ela só muda depois de uma criação bem-sucedida.
+- **Motorista:** a API não tem rota para o motorista listar corridas, então ele informa o id.
+
+Para rodar a UI fora do Docker, com a API do compose no ar:
+
+```bash
+npm run dev --workspace apps/ui
+```
 
 ## Autenticação
 
@@ -224,10 +248,8 @@ apps/
   worker/            consumidor de eventos
     src/             consumidores, cache, historico, metricas
     test/            testes de integração
-  ui/                interface React
-    public/
+  ui/                interface React (Vite), servida pelo nginx no Docker
     src/             pages, components, services
-    test/
 infra/               configuração local de mysql, redis, mongodb, rabbitmq e prometheus
 docs/                documentação
 docker-compose.yml   ambiente local

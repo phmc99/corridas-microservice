@@ -39,6 +39,15 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  ui:
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
   mysql:
     image: mysql:8.4
     environment:
