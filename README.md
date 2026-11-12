@@ -2,14 +2,14 @@
 
 Versão simplificada do fluxo central de um sistema de táxi: passageiros solicitam corridas, motoristas aceitam e o sistema acompanha o status em tempo quase real.
 
-> **Status:** Fase 2. A API está pronta e roda com MySQL, Redis e RabbitMQ pelo `docker compose`. O worker, a UI, o MongoDB, o Prometheus e o tracing com OpenTelemetry ainda não existem.
+> **Status:** Fase 3. A API e o worker estão prontos e rodam com MySQL, Redis, MongoDB e RabbitMQ pelo `docker compose`. A UI, o Prometheus e o tracing com OpenTelemetry ainda não existem.
 
 ## Arquitetura
 
 | Componente | Responsabilidade | Situação |
 | --- | --- | --- |
 | API (Node.js, Express 5, Prisma) | Cria, altera o status e consulta corridas. Autenticação via JWT. | Pronta |
-| Worker (Node.js) | Consome os eventos `corrida.criada` e `corrida.status_alterado`, atualiza o cache no Redis e grava o histórico no MongoDB. | A fazer |
+| Worker (Node.js, Express 5) | Consome os eventos `corrida.criada` e `corrida.status_alterado`, atualiza o cache no Redis e grava o histórico no MongoDB. | Pronto |
 | UI (React) | Login com token, criar corrida, listar e acompanhar status. | A fazer |
 | Broker | RabbitMQ. | No compose |
 
@@ -21,13 +21,28 @@ Pré-requisito: apenas [Docker](https://docs.docker.com/get-docker/) instalado.
 docker compose up --build
 ```
 
-A API fica em `http://localhost:3000`. Ao subir, ela aplica as migrations do banco sozinha.
+A API fica em `http://localhost:3000`. Ao subir, ela aplica as migrations do banco sozinha. O worker expõe só o `/metrics`, em `http://localhost:3001/metrics`.
 
 Para rodar os testes contra os serviços do compose:
 
 ```bash
 docker compose run --rm api npm test
 ```
+
+```bash
+docker compose run --rm worker npm test
+```
+
+## Monorepo
+
+O repositório usa [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces): `apps/api` e `apps/worker` são pacotes separados, com um único `package-lock.json` e uma única configuração do ESLint na raiz.
+
+```bash
+npm install       # instala as dependências de todos os apps
+npm run lint      # lint de todo o repositório
+```
+
+Os Dockerfiles ficam em cada app, mas o build parte da raiz (`context: .` no compose), porque precisa do `package-lock.json` de lá. Cada imagem instala só as dependências do próprio app (`npm ci --workspace`).
 
 ## API
 
@@ -78,7 +93,7 @@ Existem duas duplicações diferentes, cada uma tratada em um lugar:
 | Camada | Duplicação | Identificador | Quem impede |
 | --- | --- | --- | --- |
 | API | O cliente repete o `POST` | `Idempotency-Key` | Índice único `(passageiro_id, idempotency_key)` no MySQL |
-| Worker (próxima fase) | O RabbitMQ entrega a mesma mensagem de novo | `evento_id` | Índice único em `evento_id` no MongoDB |
+| Worker | O RabbitMQ entrega a mesma mensagem de novo | `evento_id` | `evento_id` usado como `_id` no MongoDB, que é único |
 
 Na API:
 
@@ -109,8 +124,45 @@ A API publica no exchange `corridas.eventos` (tipo `topic`), com as routing keys
 ## Cache
 
 - O `GET /corridas/:id` lê a chave `corrida:{id}` no Redis. Se não achar, lê do MySQL.
-- A API só lê o cache. Quem vai escrever é o worker, com o objeto `corrida` do evento.
+- A API só lê o cache. Quem escreve é o worker, com o objeto `corrida` do evento.
+- A chave expira em 24 horas. Sem ela, a leitura cai no MySQL.
 - Se o Redis estiver fora, a leitura cai no MySQL sem erro para o cliente.
+
+## Worker
+
+Consome a fila `corridas.worker` e, para cada evento:
+
+1. grava o objeto `corrida` no Redis, na chave `corrida:{id}`;
+2. grava o evento na coleção `historico_eventos` do MongoDB (banco `corridas`), com `_id` igual ao `evento_id`.
+
+```json
+{
+  "_id": "47fff1ca-3818-4cd3-974f-3a0090f25998",
+  "tipo": "corrida.criada",
+  "corrida_id": 2,
+  "status": "SOLICITADA",
+  "correlation_id": "8086b17d-a971-40b2-bd5c-e8241f1f870e",
+  "ocorrido_em": "2026-11-10T23:28:17.280Z",
+  "registrado_em": "2026-11-10T23:28:17.301Z",
+  "corrida": { "...": "..." }
+}
+```
+
+O RabbitMQ entrega cada mensagem pelo menos uma vez, então a mesma mensagem pode chegar de novo. As duas etapas podem ser repetidas sem efeito colateral:
+
+- **Histórico:** um `evento_id` repetido viola o `_id` e é ignorado. O worker dá `ack` e conta como `duplicado`.
+- **Cache:** o status só avança (`SOLICITADA` → `ACEITA` → `EM_ANDAMENTO` → `FINALIZADA`). Um evento com status anterior ao que já está no cache não sobrescreve.
+- **Ordem:** primeiro o cache, depois o histórico. Se o histórico falhar, a mensagem volta para a fila e as duas etapas rodam de novo. Na ordem inversa, a reentrega seria tratada como duplicada e o cache ficaria desatualizado.
+
+Falhas:
+
+| Situação | O que acontece |
+| --- | --- |
+| Redis ou MongoDB fora | `nack` com retorno para a fila, depois de 1 segundo. A mensagem é processada quando o serviço voltar. |
+| Mensagem malformada (sem `evento_id` ou `corrida.id`) | Descartada e registrada em log. Reenviar só faria falhar de novo. |
+| Conexão com o RabbitMQ perdida | O worker encerra e o Docker o reinicia (`restart: unless-stopped`). As mensagens sem `ack` voltam para a fila. |
+
+O worker processa uma mensagem por vez (`prefetch 1`). Isso evita duas gravações da mesma corrida em paralelo no cache e mantém o código simples.
 
 ## Observabilidade
 
@@ -124,7 +176,20 @@ A API publica no exchange `corridas.eventos` (tipo `topic`), com as routing keys
 | `eventos_publicados_total` | Eventos publicados, por tipo e resultado (`sucesso` ou `falha`). |
 | `rabbitmq_fila_mensagens` | Mensagens aguardando consumo na fila `corridas.worker`. |
 
+No worker, em `http://localhost:3001/metrics`:
+
+| Métrica | O que mede |
+| --- | --- |
+| `eventos_consumidos_total` | Eventos consumidos, por tipo e resultado (`processado`, `duplicado`, `invalido` ou `falha`). Dá a taxa e os erros. |
+| `evento_processamento_duracao_seconds` | Histograma do tempo para gravar cache e histórico. |
+| `evento_atraso_seconds` | Histograma do atraso entre a publicação pela API e o fim do processamento. |
+| `rabbitmq_fila_mensagens` | Mensagens aguardando consumo na fila `corridas.worker`. |
+
+Os logs do worker levam o `correlation_id` recebido no evento, então uma corrida pode ser seguida da requisição na API até a gravação no worker.
+
 ## Testes
+
+API:
 
 - fluxo feliz, da criação à finalização, conferindo os eventos publicados;
 - `401` sem token, com token expirado, com assinatura de outra chave e com `alg: none`;
@@ -133,11 +198,19 @@ A API publica no exchange `corridas.eventos` (tipo `topic`), com as routing keys
 - `409` em transição inválida e em aceite simultâneo;
 - `400` e `404`, leitura pelo cache e `/metrics`.
 
+Worker:
+
+- fluxo feliz: evento publicado no RabbitMQ chega ao cache e ao histórico;
+- mensagem duplicada não grava o histórico duas vezes;
+- evento antigo entregue depois não volta o status do cache;
+- mensagem malformada é reconhecida como inválida.
+
 ## Decisões e limitações
 
 - **Evento perdido com o broker fora.** A corrida é gravada e a API responde `201`, mas o evento se perde. Fica registrado em log e em `eventos_publicados_total{resultado="falha"}`. O MySQL continua correto, mas o histórico fica sem aquele evento. A correção seria uma tabela outbox, deixada de fora para manter a solução simples.
 - **Cache levemente atrasado.** Como o cache é atualizado de forma assíncrona pelo worker, um `GET` logo depois de um `PATCH` pode mostrar o status anterior por alguns instantes.
-- **Testes no ambiente de desenvolvimento.** Os testes usam o mesmo banco e o mesmo broker do compose. Os eventos que eles geram também vão para a fila `corridas.worker`.
+- **Testes no ambiente de desenvolvimento.** Os testes usam o mesmo banco e o mesmo broker do compose. Os eventos que eles geram também vão para a fila `corridas.worker` e são processados pelo worker. Os testes do worker usam ids de corrida altos, que o MySQL não vai gerar, e apagam o que gravaram.
+
 
 ## Estrutura de pastas
 
@@ -150,7 +223,7 @@ apps/
     test/            testes de integração e tokens de teste
   worker/            consumidor de eventos
     src/             consumidores, cache, historico, metricas
-    test/
+    test/            testes de integração
   ui/                interface React
     public/
     src/             pages, components, services
@@ -158,8 +231,10 @@ apps/
 infra/               configuração local de mysql, redis, mongodb, rabbitmq e prometheus
 docs/                documentação
 docker-compose.yml   ambiente local
+package.json         workspaces do npm, lint e testes de todos os apps
+eslint.config.js     configuração do ESLint para todo o repositório
 ```
 
 ## CI
 
-O pipeline do GitHub Actions ficará em `.github/workflows/`. A API já tem os comandos que ele vai usar: `npm run lint` e `npm test`.
+O pipeline do GitHub Actions ficará em `.github/workflows/`. Ele vai usar os comandos da raiz: `npm run lint` e, com os serviços no ar, `npm test` em cada app.

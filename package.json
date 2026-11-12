@@ -1,0 +1,16 @@
+{
+  "name": "corridas",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/worker"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "test": "npm test --workspaces"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0"
+  }
+}

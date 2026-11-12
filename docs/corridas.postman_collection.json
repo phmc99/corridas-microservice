@@ -1,13 +1,17 @@
 {
   "info": {
-    "name": "corridas API",
-    "description": "Endpoints da API de corridas (Fase 2).\n\nSuba o ambiente com `docker compose up --build` e rode as pastas em ordem: cada pasta guarda o id da corrida que cria em uma variável da coleção.\n\nOs tokens são apenas de teste e vêm de apps/api/test/tokens-teste.json.",
+    "name": "corridas",
+    "description": "Endpoints da API e do worker de corridas (Fase 3).\n\nSuba o ambiente com `docker compose up --build` e rode as pastas em ordem: cada pasta guarda o id da corrida que cria em uma variável da coleção.\n\nOs tokens são apenas de teste e vêm de apps/api/test/tokens-teste.json.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3000"
+    },
+    {
+      "key": "workerUrl",
+      "value": "http://localhost:3001"
     },
     {
       "key": "tokenPassageiro1",
@@ -1250,7 +1254,7 @@
       "name": "4. Métricas",
       "item": [
         {
-          "name": "Métricas Prometheus",
+          "name": "Métricas da API",
           "request": {
             "method": "GET",
             "auth": {
@@ -1274,6 +1278,41 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Métricas do worker",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{workerUrl}}/metrics",
+              "host": [
+                "{{workerUrl}}"
+              ],
+              "path": [
+                "metrics"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"expõe eventos consumidos, duração, atraso e fila\", () => {",
+                  "  const corpo = pm.response.text();",
+                  "  [\"eventos_consumidos_total\", \"evento_processamento_duracao_seconds\", \"evento_atraso_seconds\", \"rabbitmq_fila_mensagens\"]",
+                  "    .forEach((metrica) => pm.expect(corpo).to.include(metrica));",
+                  "});"
                 ]
               }
             }
