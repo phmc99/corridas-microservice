@@ -21,4 +21,4 @@ RUN npx prisma generate --schema src/database/schema.prisma
 USER node
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm run migrate && exec node src/server.js"]
+CMD ["sh", "-c", "npm run migrate && exec node --require ./src/tracing.js src/server.js"]

@@ -2,7 +2,7 @@
 
 Versão simplificada do fluxo central de um sistema de táxi: passageiros solicitam corridas, motoristas aceitam e o sistema acompanha o status em tempo quase real.
 
-> **Status:** Fase 4. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB e RabbitMQ pelo `docker compose`. O Prometheus e o tracing com OpenTelemetry ainda não existem.
+> **Status:** Fase 4. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB, RabbitMQ, Prometheus e Jaeger pelo `docker compose`. O teste de carga ainda não existe.
 
 ## Arquitetura
 
@@ -21,7 +21,7 @@ Pré-requisito: apenas [Docker](https://docs.docker.com/get-docker/) instalado.
 docker compose up --build
 ```
 
-A UI fica em `http://localhost:8080` e a API em `http://localhost:3000`. Ao subir, ela aplica as migrations do banco sozinha. O worker expõe só o `/metrics`, em `http://localhost:3001/metrics`.
+A UI fica em `http://localhost:8080` e a API em `http://localhost:3000`. Ao subir, ela aplica as migrations do banco sozinha. O worker expõe só o `/metrics`, em `http://localhost:3001/metrics`. O Prometheus fica em `http://localhost:9090` e os alertas em `http://localhost:9090/alerts`. Os traces ficam no Jaeger, em `http://localhost:16686`.
 
 Para rodar os testes contra os serviços do compose:
 
@@ -190,7 +190,7 @@ O worker processa uma mensagem por vez (`prefetch 1`). Isso evita duas gravaçõ
 
 ## Observabilidade
 
-- **Logs:** JSON no stdout, com `timestamp`, `level`, `message` e `correlation_id`. O `correlation_id` vem do cabeçalho `X-Correlation-Id` ou é gerado, volta na resposta e vai em cada evento publicado. Os logs não são o histórico: o histórico é gravado pelo worker a partir dos eventos.
+- **Logs:** JSON no stdout, com `timestamp`, `level`, `message`, `correlation_id` e `trace_id`. O `trace_id` é o do span ativo e leva direto ao trace no Jaeger. O `correlation_id` vem do cabeçalho `X-Correlation-Id` ou é gerado, volta na resposta e vai em cada evento publicado. Os logs não são o histórico: o histórico é gravado pelo worker a partir dos eventos.
 - **Métricas** em `/metrics`:
 
 | Métrica | O que mede |
@@ -210,6 +210,26 @@ No worker, em `http://localhost:3001/metrics`:
 | `rabbitmq_fila_mensagens` | Mensagens aguardando consumo na fila `corridas.worker`. |
 
 Os logs do worker levam o `correlation_id` recebido no evento, então uma corrida pode ser seguida da requisição na API até a gravação no worker.
+
+- **Prometheus:** coleta o `/metrics` da API (`job="api"`) e do worker (`job="worker"`) a cada 15 segundos. A configuração fica em `infra/prometheus/prometheus.yml`.
+- **Trace distribuído:** OpenTelemetry na API e no worker, exportando por OTLP para o Jaeger. O `src/tracing.js` de cada app é carregado com `node --require` antes do resto, para instrumentar HTTP, Express, Prisma e ioredis na API, e ioredis e MongoDB no worker. Sem `OTEL_EXPORTER_OTLP_ENDPOINT` (como nos testes), o tracing fica desligado. O RabbitMQ não é instrumentado automaticamente: a API cria o span `publicar <tipo>` e grava o `traceparent` nos cabeçalhos da mensagem. O worker lê esse cabeçalho e abre `processar <tipo>` como filho dele. Uma corrida aparece como um trace só:
+
+```
+corridas-api    POST /corridas
+corridas-api      request handler - /corridas
+corridas-api        prisma:client:operation        (MySQL)
+corridas-api        publicar corrida.criada
+corridas-worker       processar corrida.criada
+corridas-worker         get / set                  (Redis)
+corridas-worker         insert historico_eventos   (MongoDB)
+```
+
+- **Alertas:** em `observability/alerts.yml`, carregados pelo Prometheus. O arquivo `observability/alerts-prometheusrule.yaml` tem os mesmos `groups` no formato `PrometheusRule`, só como arquivo.
+
+| Alerta | Condição | Por quê |
+| --- | --- | --- |
+| `ApiTaxaDeErrosAlta` | Mais de 5% das respostas da API em 5xx por 5 minutos. | Erro do lado do servidor afeta o passageiro e o motorista diretamente. |
+| `FilaDeEventosAcumulada` | Mais de 100 mensagens na fila `corridas.worker` por 5 minutos. | Worker parado ou lento: o cache de status e o histórico ficam atrasados. A API e o worker exportam a mesma métrica, por isso o `max`. |
 
 ## Testes
 
@@ -252,6 +272,7 @@ apps/
     src/             pages, components, services
 infra/               configuração local de mysql, redis, mongodb, rabbitmq e prometheus
 docs/                documentação
+observability/       regras de alerta do Prometheus (e a versão PrometheusRule)
 docker-compose.yml   ambiente local
 package.json         workspaces do npm, lint e testes de todos os apps
 eslint.config.js     configuração do ESLint para todo o repositório

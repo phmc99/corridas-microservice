@@ -1,5 +1,6 @@
 const { randomUUID } = require('node:crypto');
 const amqp = require('amqplib');
+const { context, propagation, SpanKind, SpanStatusCode, trace } = require('@opentelemetry/api');
 const logger = require('../logger');
 const { eventosPublicados } = require('../metricas/metricas');
 
@@ -50,6 +51,16 @@ async function publicarEvento(tipo, corrida, correlationId) {
     corrida,
   };
 
+  // Span da publicação, filho do span da requisição HTTP.
+  const span = trace.getTracer('corridas-api').startSpan(`publicar ${tipo}`, {
+    kind: SpanKind.PRODUCER,
+    attributes: { 'messaging.system': 'rabbitmq', 'messaging.message.id': eventoId, 'corrida.id': corrida.id },
+  });
+  const contextoDoSpan = trace.setSpan(context.active(), span);
+  // Escreve o traceparent nos cabeçalhos da mensagem. O worker lê de lá e continua o mesmo trace.
+  const headers = {};
+  propagation.inject(contextoDoSpan, headers);
+
   try {
     const canal = await obterCanal();
     await new Promise((resolve, reject) => {
@@ -58,15 +69,19 @@ async function publicarEvento(tipo, corrida, correlationId) {
         contentType: 'application/json',
         messageId: eventoId,
         correlationId,
+        headers,
       }, (erro) => (erro ? reject(erro) : resolve()));
     });
     eventosPublicados.inc({ tipo, resultado: 'sucesso' });
     logger.info('evento publicado', { tipo, evento_id: eventoId, corrida_id: corrida.id, correlation_id: correlationId });
   } catch (erro) {
+    span.setStatus({ code: SpanStatusCode.ERROR, message: erro.message });
     eventosPublicados.inc({ tipo, resultado: 'falha' });
     logger.error('falha ao publicar evento', {
       erro: erro.message, tipo, evento_id: eventoId, corrida_id: corrida.id, correlation_id: correlationId,
     });
+  } finally {
+    span.end();
   }
 }
 

@@ -1,0 +1,25 @@
+# Mesmos groups de alerts-prometheusrule.yaml. Ao mudar um, mude o outro.
+groups:
+  - name: corridas
+    rules:
+      # Mais de 5% das requisições da API terminando em 5xx.
+      - alert: ApiTaxaDeErrosAlta
+        expr: |
+          sum(rate(http_requests_total{job="api", status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job="api"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API com mais de 5% de respostas 5xx"
+          description: "{{ $value | humanizePercentage }} das requisições da API terminaram em erro nos últimos 5 minutos."
+
+      # Eventos acumulando na fila: worker parado ou lento. API e worker exportam a mesma métrica, daí o max.
+      - alert: FilaDeEventosAcumulada
+        expr: max(rabbitmq_fila_mensagens) > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Fila corridas.worker com mais de 100 mensagens"
+          description: "{{ $value }} mensagens aguardando consumo há pelo menos 5 minutos."

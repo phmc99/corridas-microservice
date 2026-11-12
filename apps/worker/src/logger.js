@@ -1,5 +1,9 @@
+const { trace } = require('@opentelemetry/api');
+
 function escrever(level, message, campos) {
-  console.log(JSON.stringify({ timestamp: new Date().toISOString(), level, message, ...campos }));
+  // trace_id do span ativo: liga o log ao trace no Jaeger. Fora de um span, fica de fora.
+  const traceId = trace.getActiveSpan()?.spanContext().traceId;
+  console.log(JSON.stringify({ timestamp: new Date().toISOString(), level, message, trace_id: traceId, ...campos }));
 }
 
 module.exports = {

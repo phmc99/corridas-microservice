@@ -10,6 +10,7 @@ services:
       DATABASE_URL: mysql://corridas:corridas_teste@mysql:3306/corridas
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     depends_on:
       mysql:
         condition: service_healthy
@@ -29,6 +30,7 @@ services:
       REDIS_URL: redis://redis:6379
       MONGODB_URL: mongodb://mongodb:27017
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     # Se perder a conexão com o RabbitMQ, o worker sai e o Docker sobe de novo.
     restart: unless-stopped
     depends_on:
@@ -88,6 +90,24 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
+
+  # Recebe os traces da API e do worker por OTLP (porta 4318) e mostra em http://localhost:16686.
+  # Guarda tudo em memória: os traces somem quando o container reinicia.
+  jaeger:
+    image: jaegertracing/jaeger:2.11.0
+    ports:
+      - "16686:16686"
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+    depends_on:
+      - api
+      - worker
 
 volumes:
   mysql-dados:

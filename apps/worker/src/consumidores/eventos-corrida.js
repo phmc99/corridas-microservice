@@ -1,4 +1,5 @@
 const amqp = require('amqplib');
+const { propagation, ROOT_CONTEXT, SpanKind, SpanStatusCode, trace } = require('@opentelemetry/api');
 const { salvarCorrida } = require('../cache/corridas');
 const { registrarEvento } = require('../historico/eventos');
 const logger = require('../logger');
@@ -42,7 +43,7 @@ async function tratarMensagem(msg) {
     eventosConsumidos.inc({ tipo: msg.fields.routingKey, resultado: 'invalido' });
     logger.error('mensagem inválida descartada', { message_id: msg.properties.messageId });
     canal.nack(msg, false, false);
-    return;
+    return 'invalido';
   }
 
   const { tipo, evento_id: eventoId, correlation_id: correlationId } = evento;
@@ -58,13 +59,37 @@ async function tratarMensagem(msg) {
       ...campos, status: evento.corrida.status,
     });
     canal.ack(msg);
+    return resultado;
   } catch (erro) {
     eventosConsumidos.inc({ tipo, resultado: 'falha' });
     logger.error('falha ao processar evento', { ...campos, erro: erro.message });
     // Volta para a fila. A espera evita repetir sem parar enquanto o Redis ou o MongoDB estão fora.
     await esperar(ESPERA_ANTES_DE_REPROCESSAR_MS);
     canal.nack(msg, false, true);
+    return 'falha';
   }
+}
+
+// Continua o trace que começou na API: lê o traceparent dos cabeçalhos da mensagem e
+// processa dentro de um span filho dele. Os spans do Redis e do MongoDB ficam dentro deste.
+function tratarMensagemComTrace(msg) {
+  const contextoDaApi = propagation.extract(ROOT_CONTEXT, msg.properties.headers ?? {});
+  const opcoes = {
+    kind: SpanKind.CONSUMER,
+    attributes: { 'messaging.system': 'rabbitmq', 'messaging.message.id': msg.properties.messageId },
+  };
+
+  return trace.getTracer('corridas-worker').startActiveSpan(
+    `processar ${msg.fields.routingKey}`,
+    opcoes,
+    contextoDaApi,
+    async (span) => {
+      const resultado = await tratarMensagem(msg);
+      span.setAttribute('evento.resultado', resultado);
+      if (resultado === 'falha' || resultado === 'invalido') span.setStatus({ code: SpanStatusCode.ERROR });
+      span.end();
+    },
+  );
 }
 
 async function iniciarConsumo() {
@@ -83,7 +108,7 @@ async function iniciarConsumo() {
   await canal.bindQueue(FILA, EXCHANGE, 'corrida.*');
   // Uma mensagem por vez: simplifica o cache (ver cache/corridas.js).
   await canal.prefetch(1);
-  await canal.consume(FILA, tratarMensagem);
+  await canal.consume(FILA, tratarMensagemComTrace);
   logger.info('consumindo eventos', { fila: FILA });
 
   return async function pararConsumo() {

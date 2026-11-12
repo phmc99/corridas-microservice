@@ -16,4 +16,4 @@ WORKDIR /app/apps/worker
 USER node
 EXPOSE 3001
 
-CMD ["node", "src/server.js"]
+CMD ["node", "--require", "./src/tracing.js", "src/server.js"]
