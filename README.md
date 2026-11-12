@@ -2,7 +2,11 @@
 
 Versão simplificada do fluxo central de um sistema de táxi: passageiros solicitam corridas, motoristas aceitam e o sistema acompanha o status em tempo quase real.
 
-> **Status:** Fase 4. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB, RabbitMQ, Prometheus e Jaeger pelo `docker compose`. O teste de carga roda com k6.
+> **Status:** Fase 5. A API, o worker e a UI estão prontos e rodam com MySQL, Redis, MongoDB, RabbitMQ, Prometheus e Jaeger pelo `docker compose`. O teste de carga roda com k6.
+
+## Vídeo de apresentação
+
+Link com o vídeo de apresentação: [youtu.be/nqedEx-Gggs](https://youtu.be/nqedEx-Gggs)
 
 ## Arquitetura
 
